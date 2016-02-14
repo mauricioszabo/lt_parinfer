@@ -1,3 +1,7 @@
+# Parinfer for Light Table
+
+![preview](https://cloud.githubusercontent.com/assets/138037/13033544/8c75d31e-d301-11e5-9f72-4def5e1ff12e.gif)
+
 To build the plugin:
 
 * Clone the repo into your plugins folder
