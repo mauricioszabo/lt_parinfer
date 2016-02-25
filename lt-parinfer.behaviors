@@ -1,5 +1,5 @@
 [
-  [:app :lt.objs.plugins/load-js "lt-parinfer_compiled.js"]
+  [:app :lt.objs.plugins/load-js "parinfer_compiled.js"]
   [:editor.clj :lt.objs.editor/on-change :parinfer-behind-cursor]
   [:editor.clj.instarepl :lt.objs.editor/on-change :parinfer-behind-cursor]
   [:editor.cljs :lt.objs.editor/on-change :parinfer-behind-cursor]]
