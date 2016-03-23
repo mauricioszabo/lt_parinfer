@@ -2,4 +2,12 @@
   [:app :lt.objs.plugins/load-js "parinfer_compiled.js"]
   [:editor.clj :lt.objs.editor/on-change :parinfer-behind-cursor]
   [:editor.clj.instarepl :lt.objs.editor/on-change :parinfer-behind-cursor]
-  [:editor.cljs :lt.objs.editor/on-change :parinfer-behind-cursor]]
+  [:editor.cljs :lt.objs.editor/on-change :parinfer-behind-cursor]
+
+  [:editor.clj :lt.plugins.lt-parinfer/stop-parinfer]
+  [:editor.clj :lt.plugins.lt-parinfer/start-parinfer]
+  [:editor.clj :lt.plugins.lt-parinfer/show-parinfer-mode]
+  [:editor.cljs :lt.plugins.lt-parinfer/stop-parinfer]
+  [:editor.cljs :lt.plugins.lt-parinfer/start-parinfer]
+  [:editor.cljs :lt.plugins.lt-parinfer/show-parinfer-mode]
+]
