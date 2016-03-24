@@ -6,7 +6,19 @@ It automatically closes parens for you based on code indentation.
 
 ![Example Image](https://raw.githubusercontent.com/mauricioszabo/lt_parinfer/master/doc/example.gif)
 
-To build the plugin:
+## Usage:
+
+Simply open a Clojure or a ClojureScript file, and parinfer will auto-indent file based on your current use of parenthesis, and then work on "indent-mode".
+
+There are now two ways of working with Parinfer: **indent** will infer parenthesis based on your code indentation - this is the default way of working. **paren** will infer indentation based on your parenthesis usage. I recommend adding a keystroke to toggle mode. Open `User keymaps` and add something like:
+
+```clojure
+  ; Parinfer
+  [:editor.clj "ctrl-0" (:parinfer-toggle-mode)]
+  [:editor.cljs "ctrl-0" (:parinfer-toggle-mode)]
+```
+
+## To build the plugin:
 
 * Clone the repo into your plugins folder
   * On OS X: `~/Library/Application Support/LightTable/plugins/`
@@ -24,4 +36,6 @@ Note: due to [Issue 1042](https://github.com/LightTable/LightTable/issues/1042) 
 
 ## Roadmap (probably):
 
+* Use "input" event of codemirror, not "change", so changes appear instantaneous
+* When removing chars from a name in "paren-mode", reduces indentation of next lines
 * I'm thinking about a "clever-mode", one that would infer if you want to use indent or paren mode and run parinfer with that mode.
