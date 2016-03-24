@@ -1,4 +1,4 @@
-# 0.0.3
+# NEXT VERSION
 
 ## Features
 * Added paren-mode
