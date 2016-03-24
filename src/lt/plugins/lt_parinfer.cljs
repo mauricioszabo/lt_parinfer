@@ -1,33 +1,24 @@
 (ns lt.plugins.lt-parinfer
   (:require [lt.objs.editor :as editor]
             [lt.objs.plugins :as plugins]
+            [lt.object :as object]
+            [lt.objs.statusbar :as stat]
+            [lt.objs.popup :as popup]
             [lt.objs.editor.pool :as pool]
             [lt.objs.command :as cmd])
   (:require-macros [lt.macros :refer [behavior]]))
 
 (def pi (js/require (plugins/local-module "Parinfer" "parinfer")))
 
-(def editor-modes (atom {}))
+(defn run-parinfer [txt cursor-line cursor-x mode]
+  (let [params #js{:cursorLine cursor-line,
+                   :cursorX cursor-x}]
+    (case mode
+      :indent (.indentMode pi txt params)
+      :paren (.parenMode pi txt params)
+      #js {:text txt, :success true})))
 
-(println (.-text (.parenMode pi "
-(fn
-  ([n]
-    (+ 1 n)
-            ))
-")))
-
-(println (.-text (.parenMode pi "
-(fn algoa [n
-          m]
-  (+ 1 n)))
-" #js {:cursorLine 0,
-       :cursorX 9})))
-
-(defn run-parinfer [txt cursor-line cursor-x]
-  (.indentMode pi txt #js{:cursorLine cursor-line,
-                          :cursorX cursor-x}))
-
-(defn parinfer-behind-cursor [ & args]
+(defn parinfer-behind-cursor [ & _]
   (let [cm (editor/->cm-ed (pool/last-active))
         old-txt (. cm getValue)
         scroll (.getScrollInfo cm)
