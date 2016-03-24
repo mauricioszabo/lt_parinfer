@@ -67,17 +67,21 @@
   (if (not= (.-text result) (editor/->val ed))
     (editor/set-val cm (.-text result))))
 
+(defn- unbalanced [ed]
+  (popup/popup! {:header "Unbalanced Parenthesis"
+                 :body [:div
+                          [:p "The opened file is unbalanced. Parinfer is disabled"]
+                          [:p "Please, correct the file and activate parinfer again"]]
+                 :buttons [{:label "Ok"}]})
+  (object/assoc-in! parinfer-editors [:modes (editor-id)] :disabled))
+
 (defn start-parinfer [ed]
   (let [cm (editor/->cm-ed ed)
         old-txt (.getValue cm)
         result (.parenMode pi old-txt)]
     (if (.-success result)
       (update-editor-and-state ed cm result) ; Is balanced - just adjust editor
-      (popup/popup! {:header "Unbalanced Parenthesis"
-                     :body [:div
-                              [:p "The opened file is unbalanced. Parinfer is disabled"]
-                              [:p "Please, correct the file and activate parinfer again"]]
-                     :buttons [{:label "Ok"}]}))))
+      (unbalanced ed))))
 
 (defn start-or-continue-parinfer []
   (let [ed (pool/last-active)]
