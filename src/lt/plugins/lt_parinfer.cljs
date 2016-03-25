@@ -13,7 +13,8 @@
 
 (defn run-parinfer [txt cursor-line cursor-x mode]
   (let [params #js{:cursorLine cursor-line,
-                   :cursorX cursor-x}]
+                   :cursorX cursor-x
+                   :cursorDx (- cursor-x (:last-x @parinfer-editors))}]
     (case mode
       :indent (.indentMode pi txt params)
       :paren (.parenMode pi txt params)
@@ -35,7 +36,9 @@
         (editor/set-val cm txt)
         (editor/scroll-to cm (.-left scroll) (.-top scroll))
         (.setCursor cm cursor)
-        (.setHistory cm history)))))
+        (.setHistory cm history)
+        (object/assoc-in! parinfer-editors
+                          [:last-x] cursor-x)))))
 
 (defn- editor-id [] (object/->id (pool/last-active)))
 
