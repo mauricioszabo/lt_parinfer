@@ -51,9 +51,7 @@
         (editor/set-val cm txt)
         (editor/scroll-to cm (.-left scroll) (.-top scroll))
         (.setCursor cm cursor)
-        (.setHistory cm history)
-        (object/assoc-in! parinfer-editors
-                          [:last-x] cursor-x)))))
+        (.setHistory cm history)))))
 
 (defn- editor-id [] (object/->id (pool/last-active)))
 
