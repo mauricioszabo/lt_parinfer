@@ -11,16 +11,30 @@
 
 (def pi (js/require (plugins/local-module "Parinfer" "parinfer")))
 
-(defn run-parinfer [txt cursor-line cursor-x mode]
+(defn run-parinfer [txt cursor-line cursor-x cursor-dx mode]
   (let [params #js{:cursorLine cursor-line,
                    :cursorX cursor-x
-                   :cursorDx (- cursor-x (:last-x @parinfer-editors))}]
+                   :cursorDx cursor-dx}]
     (case mode
       :indent (.indentMode pi txt params)
       :paren (.parenMode pi txt params)
       #js {:text txt, :success true})))
 
-(defn parinfer-behind-cursor [ & _]
+(defn compute-cursor-dx
+  [cursor change]
+  (when change
+    (let [ignore? (= "+indenthack" (.-origin change))]
+      (if ignore?
+        0
+        (let [start-x (.. change -to -ch)
+              new-lines (.. change -text)
+              len-last-line (count (last new-lines))
+              end-x (if (> (count new-lines) 1)
+                      len-last-line
+                      (+ len-last-line (.. change -from -ch)))]
+          (- end-x start-x))))))
+
+(defn editor-changed [_ _ change]
   (let [cm (editor/->cm-ed (pool/last-active))
         old-txt (. cm getValue)
         scroll (.getScrollInfo cm)
@@ -29,6 +43,7 @@
         cursor-line (.-line cursor)
         cursor-x (-> cursor .-ch inc)
         result (run-parinfer old-txt cursor-line cursor-x
+                             (compute-cursor-dx cursor change)
                              (get-in @parinfer-editors [:modes (editor-id)]))
         txt (.-text result)]
     (if (not= old-txt txt)
@@ -103,6 +118,10 @@
                         [:modes]
                         dissoc (editor-id))))
 
+(behavior ::parinfer-infer
+          :triggers #{:change}
+          :reaction editor-changed)
+
 ;; Statusbar Updates
 (behavior ::update-parinfer-mode
           :triggers #{:active}
@@ -110,9 +129,6 @@
                       (object/assoc-in! parinfer-editors [:current-editor] (editor-id))))
 
 ;; Commands
-(cmd/command {:command :parinfer-behind-cursor
-              :desc "Parinfer: infer parenthesis on current editor"
-              :exec parinfer-behind-cursor})
 
 (cmd/command {:command :parinfer-enable
               :desc "Parinfer: enable parinfer in current editor"
