@@ -6,7 +6,19 @@ It automatically closes parens for you based on code indentation.
 
 ![Example Image](https://raw.githubusercontent.com/mauricioszabo/lt_parinfer/master/doc/example.gif)
 
-To build the plugin:
+## Usage:
+
+Simply open a Clojure or a ClojureScript file, and parinfer will auto-indent file based on your current use of parenthesis, and then work on "indent-mode".
+
+There are now two ways of working with Parinfer: **indent** will infer parenthesis based on your code indentation - this is the default way of working. **paren** will infer indentation based on your parenthesis usage. I recommend adding a keystroke to toggle mode. Open `User keymaps` and add something like:
+
+```clojure
+  ; Parinfer
+  [:editor.clj "ctrl-0" (:parinfer-toggle-mode)]
+  [:editor.cljs "ctrl-0" (:parinfer-toggle-mode)]
+```
+
+## To build the plugin:
 
 * Clone the repo into your plugins folder
   * On OS X: `~/Library/Application Support/LightTable/plugins/`
@@ -22,10 +34,8 @@ For interactive development, use the built-in clojurescript eval (ctrl-enter by 
 
 Note: due to [Issue 1042](https://github.com/LightTable/LightTable/issues/1042) the `App: Reload behaviors` command will not reload the plugin source. To pick up changes either use interactive eval or restart Light Table.
 
-## Bugs, Problems
+## Roadmap (probably):
 
-1. The plugin re-evaluates the whole text, so if you have a text made without paredit (and that does not obey the parenthesis rules that paredit uses), it will probably re-balance your code and break things
-1. I didn't find any good documentation on how to work with plugins, so for now we're not able to deactivate the plugin
-1. It just works in "indent-mode", there's no "paren-mode" yet. This is a big deal if you open files that are not parenthesis-balanced - it'll probably corrupt your code
-1. When installing it, it gives the message "Some plugin dependencies are missing". I wasn't able to discover what's wrong, or even if it's a bug in my plugin or in LightTable
-
+* Use "input" event of codemirror, not "change", so changes appear instantaneous
+* When removing chars from a name in "paren-mode", reduces indentation of next lines
+* I'm thinking about a "clever-mode", one that would infer if you want to use indent or paren mode and run parinfer with that mode.
