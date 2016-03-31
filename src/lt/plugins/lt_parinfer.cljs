@@ -20,19 +20,18 @@
       :paren (.parenMode pi txt params)
       #js {:text txt, :success true})))
 
-(defn compute-cursor-dx
-  [cursor change]
+(defn compute-cursor-dx [cursor change]
   (when change
-    (let [ignore? (= "+indenthack" (.-origin change))]
-      (if ignore?
+    (let [new-lines (.. change -text)
+          len-last-line (count (last new-lines))
+          end-x (if (> (count new-lines) 1)
+                  len-last-line
+                  (+ len-last-line (.. change -from -ch)))
+          start-x (.. change -to -ch)]
+
+      (if (zero? start-x)
         0
-        (let [start-x (.. change -to -ch)
-              new-lines (.. change -text)
-              len-last-line (count (last new-lines))
-              end-x (if (> (count new-lines) 1)
-                      len-last-line
-                      (+ len-last-line (.. change -from -ch)))]
-          (- end-x start-x))))))
+        (- end-x start-x)))))
 
 (defn editor-changed [_ _ change]
   (let [cm (editor/->cm-ed (pool/last-active))
@@ -41,17 +40,18 @@
         cursor (.getCursor cm)
         history (.getHistory cm)
         cursor-line (.-line cursor)
-        cursor-x (-> cursor .-ch inc)
+        cursor-x (.-ch cursor)
         result (run-parinfer old-txt cursor-line cursor-x
                              (compute-cursor-dx cursor change)
                              (get-in @parinfer-editors [:modes (editor-id)]))
         txt (.-text result)]
-    (if (not= old-txt txt)
-      (do
-        (editor/set-val cm txt)
-        (editor/scroll-to cm (.-left scroll) (.-top scroll))
-        (.setCursor cm cursor)
-        (.setHistory cm history)))))
+    (when (not= old-txt txt)
+      (editor/set-val cm txt)
+      (editor/scroll-to cm (.-left scroll) (.-top scroll))
+      (if-let [new-x (.-cursorX result)]
+        (.setCursor cm (.-line cursor) new-x)
+        (.setCursor cm cursor))
+      (.setHistory cm history))))
 
 (defn- editor-id [] (object/->id (pool/last-active)))
 
@@ -75,7 +75,7 @@
                 :init (fn [this]
                         (stat/statusbar-item (bound this ->mode-str) "")))
 
-(def parinfer-editors (object/create ::parinfer.editors))
+(defonce parinfer-editors (object/create ::parinfer.editors))
 (stat/add-statusbar-item parinfer-editors)
 
 (defn update-editor-and-state [ed cm result]
