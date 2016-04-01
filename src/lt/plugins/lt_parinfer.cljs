@@ -20,29 +20,29 @@
       :paren (.parenMode pi txt params)
       #js {:text txt, :success true})))
 
-(defn compute-cursor-dx [cursor change]
-  (when change
-    (let [new-lines (.. change -text)
-          len-last-line (count (last new-lines))
-          end-x (if (> (count new-lines) 1)
-                  len-last-line
-                  (+ len-last-line (.. change -from -ch)))
-          start-x (.. change -to -ch)]
+(js->clj #js {"a" 10})
 
-      (if (zero? start-x)
-        0
-        (- end-x start-x)))))
+(defn compute-cursor-dx [cursor changes]
+  (->> (for [change changes
+             :let [new-lines (.. change -text)
+                   len-last-line (count (last new-lines))
+                   end-x (if (> (count new-lines) 1)
+                           len-last-line
+                           (+ len-last-line (.. change -from -ch)))
+                   start-x (.. change -to -ch)]]
+         (- end-x start-x))
+    (reduce +)))
 
-(defn editor-changed [_ _ change]
-  (let [cm (editor/->cm-ed (pool/last-active))
-        old-txt (. cm getValue)
+(defn editor-changed [cm changes]
+  (let [old-txt (. cm getValue)
         scroll (.getScrollInfo cm)
         cursor (.getCursor cm)
+        dx (compute-cursor-dx cursor changes)
         history (.getHistory cm)
         cursor-line (.-line cursor)
         cursor-x (.-ch cursor)
         result (run-parinfer old-txt cursor-line cursor-x
-                             (compute-cursor-dx cursor change)
+                             dx
                              (get-in @parinfer-editors [:modes (editor-id)]))
         txt (.-text result)]
     (when (not= old-txt txt)
@@ -62,10 +62,6 @@
       :paren [:span.pos "Parinfer: paren mode"]
       :disabled [:span.pos "Parinfer: disabled"]
       [:span.pos])))
-
-(behavior ::show-parinfer-mode
-          :triggers #{:active}
-          :reaction (fn [obj]))
 
 (object/object* ::parinfer.editors
                 :triggers #{}
@@ -99,14 +95,16 @@
       (update-editor-and-state ed cm result) ; Is balanced - just adjust editor
       (unbalanced ed))))
 
-(defn start-or-continue-parinfer []
-  (let [ed (pool/last-active)]
-    (if (-> @parinfer-editors (get-in [:modes (editor-id)]) nil?)
-      (start-parinfer ed))))
+(defn start-or-continue-parinfer [ed]
+  (when-not (contains? (get @parinfer-editors :modes) (editor-id))
+    (.on (editor/->cm-ed ed) "changes" editor-changed))
+
+  (when (-> @parinfer-editors (get-in [:modes (editor-id)]) nil?)
+    (start-parinfer ed)))
 
 (behavior ::start-parinfer
           :triggers #{:active}
-          :reaction (fn [obj] (start-or-continue-parinfer)))
+          :reaction (fn [ed] (start-or-continue-parinfer ed)))
 
 (behavior ::stop-parinfer
           :triggers #{:closed}
@@ -116,9 +114,6 @@
                         [:modes]
                         dissoc (editor-id))))
 
-(behavior ::parinfer-infer
-          :triggers #{:change}
-          :reaction editor-changed)
 
 ;; Statusbar Updates
 (behavior ::update-parinfer-mode
@@ -134,7 +129,7 @@
                       (object/assoc-in!
                               parinfer-editors
                               [:modes (editor-id)] nil)
-                      (start-or-continue-parinfer))})
+                      (start-or-continue-parinfer (pool/last-active)))})
 
 (cmd/command {:command :parinfer-disable
               :desc "Parinfer: disable parinfer in current editor"
