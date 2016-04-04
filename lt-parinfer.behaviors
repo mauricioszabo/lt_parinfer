@@ -1,7 +1,5 @@
 [
   [:app :lt.objs.plugins/load-js "parinfer_compiled.js"]
-  [:editor.clj :lt.plugins.lt-parinfer/parinfer-infer]
-  [:editor.cljs :lt.plugins.lt-parinfer/parinfer-infer]
 
   [:editor.clj :lt.plugins.lt-parinfer/stop-parinfer]
   [:editor.clj :lt.plugins.lt-parinfer/start-parinfer]
