@@ -20,7 +20,6 @@
       :paren (.parenMode pi txt params)
       #js {:text txt, :success true})))
 
-(js->clj #js {"a" 10})
 
 (defn compute-cursor-dx [cursor changes]
   (->> (for [change changes
@@ -33,7 +32,7 @@
          (- end-x start-x))
     (reduce +)))
 
-(defn editor-changed [cm changes]
+(defn- compute-change [cm changes mode]
   (let [old-txt (. cm getValue)
         scroll (.getScrollInfo cm)
         cursor (.getCursor cm)
@@ -41,9 +40,7 @@
         history (.getHistory cm)
         cursor-line (.-line cursor)
         cursor-x (.-ch cursor)
-        result (run-parinfer old-txt cursor-line cursor-x
-                             dx
-                             (get-in @parinfer-editors [:modes (editor-id)]))
+        result (run-parinfer old-txt cursor-line cursor-x dx mode)
         txt (.-text result)]
     (when (not= old-txt txt)
       (editor/set-val cm txt)
@@ -51,7 +48,17 @@
       (if-let [new-x (.-cursorX result)]
         (.setCursor cm (.-line cursor) new-x)
         (.setCursor cm cursor))
+      (reset! should-infer? false)
       (.setHistory cm history))))
+
+(def ^{:private true} should-infer? (atom true))
+
+(defn editor-changed [cm changes]
+  (let [mode (get-in @parinfer-editors [:modes (editor-id)])]
+    (println "Changes" [mode @should-infer? (editor-id)])
+    (cond
+      (or (nil? mode) (not @should-infer?)) (reset! should-infer? true)
+      @should-infer? (compute-change cm changes mode))))
 
 (defn- editor-id [] (object/->id (pool/last-active)))
 
