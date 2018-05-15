@@ -1,5 +1,7 @@
 # LightTable Parinfer
 
+**IMPORTANT**: This project is no longer being mantained! If you want to continue mantaining it, please open an issue and I'll link your project here!
+
 LightTable wrapper for [parinfer](https://shaunlebron.github.io/parinfer/).
 
 It automatically closes parens for you based on code indentation.
